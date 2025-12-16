@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>방 선택</title>
+
+    <style>
+        body {
+            background: #f2f2f2;
+            font-family: Arial;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .room-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .room-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            background: #00aaff;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .room-btn:hover {
+            background: #0088cc;
+        }
+        input {
+            padding: 10px;
+            width: 80%;
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 1px solid #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="room-box">
+
+    <h2>🎨 방 선택</h2>
+
+    <div id="roomList">불러오는 중...</div>
+
+    <hr style="margin: 20px">
+
+    <h3>방 생성하기</h3>
+    <input id="newRoomName" placeholder="방 이름 입력">
+    <button class="room-btn" onclick="createRoom()">방 생성</button>
+
+</div>
+
+<script>
+    async function loadRooms() {
+        const list = document.getElementById("roomList");
+        list.innerHTML = "불러오는 중...";
+
+        const res = await fetch("/cmind/rooms/list");
+        const rooms = await res.json();
+
+        if (rooms.length === 0) {
+            list.innerHTML = "<p>생성된 방이 없습니다.</p>";
+            return;
+        }
+
+        list.innerHTML = "";
+        rooms.forEach(room => {
+            const btn = document.createElement("button");
+            btn.className = "room-btn";
+            btn.innerHTML = `${room.name} (ID: ${room.id})<br>(${room.count}명 / 8명)`;
+            btn.onclick = () => enterRoom(room.id);
+            list.appendChild(btn);
+        });
+    }
+
+    function enterRoom(roomId) {
+        location.href = "/chat.html?room=" + roomId;
+    }
+
+    async function createRoom() {
+        const name = document.getElementById("newRoomName").value;
+        if (!name) return alert("방 이름을 입력하세요!");
+
+        const res = await fetch("/cmind/rooms", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({name})
+        });
+
+        const newRoom = await res.json();
+
+        // 2️⃣ 생성된 방의 id로 chat.html 페이지 이동
+        location.href = "/chat.html?room=" + newRoom.id;
+    }
+
+    loadRooms();
+</script>
+
+</body>
+</html>

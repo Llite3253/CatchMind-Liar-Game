@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CatchMind × Liar Game</title>
+
+    <style>
+        /* ================= 공통 ================= */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f2f5;
+
+            /* 핵심: 전체 화면을 세로로 배치 */
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* 화면 전체 높이 사용 */
+        }
+
+        /* 버튼 공통 스타일 추가 */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            background: #00aaff;
+            color: white;
+            font-weight: bold;
+        }
+        button:hover { background: #0088cc; }
+
+        /* ================= 상단 상태바 (Header) ================= */
+        .header {
+            width: 100%;
+            background: white;
+            padding: 12px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+            /* 크기 고정 */
+            flex-shrink: 0;
+            z-index: 10;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+        }
+
+        .header-center #topicArea {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .header-center #turnInfo {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 100px;
+            justify-content: flex-end;
+        }
+
+        #timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff4444;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        #startGameBtn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+        }
+        #startGameBtn:hover {
+            background: #e85b5b;
+        }
+
+        /* ================= 하단 영역 (Footer) - HTML 순서상 두 번째 위치 ================= */
+        .footer {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px 20px 20px 20px;
+            text-align: center;
+
+            /* 크기 고정 */
+            flex-shrink: 0;
+        }
+
+        #voteArea, #guessArea {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: inline-block;
+            min-width: 300px;
+            margin: 5px; /* 푸터 내부 요소 간격 조정 */
+        }
+
+        #guessArea input {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-right: 8px;
+        }
+
+        #voteButtons button {
+            margin: 5px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            /* 기본 버튼 스타일 재정의 */
+            background: #ddd;
+            color: #333;
+            font-weight: normal;
+        }
+        #voteButtons button:hover {
+            background: #ccc;
+        }
+
+        #finalResult {
+            margin-top: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+
+        /* ================= 메인 영역 (Main) - HTML 순서상 세 번째 위치 ================= */
+        .main {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+
+            /* 핵심: 남은 공간 모두 차지 */
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 공통 패널 스타일 */
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        /* ================= 그림판 ================= */
+        .draw-panel {
+            flex: 2;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            padding: 6px 12px;
+            background: #ddd;
+            color: #333;
+        }
+        .tool-btn.active {
+            background: #00aaff;
+            color: white;
+        }
+
+        #colorPreview {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background: #000;
+        }
+
+        #board {
+            width: 100%;
+            /* 부모 높이에 맞게 채움 */
+            flex: 1;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+        }
+
+        /* ================= 채팅 ================= */
+        .chat-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+        }
+
+        .input-area button {
+            padding: 10px 16px;
+            background: #00aaff;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div id="roomInfo">현재 인원: 0명</div>
+    </div>
+
+    <div class="header-center">
+        <div id="topicArea">주제 대기중</div>
+        <div id="turnInfo">순서 대기중</div>
+    </div>
+
+    <div class="header-right">
+        <div id="timer"></div>
+        <button id="startGameBtn" onclick="startGameClick()">게임 시작</button>
+    </div>
+</div>
+
+<div class="footer">
+
+    <div id="voteArea" style="display:none;">
+        <h3>🗳️ 라이어 투표</h3>
+        <div id="voteButtons"></div>
+    </div>
+
+    <div id="guessArea" style="display:none;">
+        <h3>❓ 정답 입력</h3>
+        <input type="text" id="guessInput" placeholder="정답을 입력하세요">
+        <button onclick="sendGuess()">제출</button>
+    </div>
+
+    <div id="finalResult"></div>
+</div>
+
+<div class="main">
+
+    <div class="panel draw-panel">
+        <h3>🎨 그림판</h3>
+
+        <div class="toolbar">
+            <input type="color" id="colorPicker" value="#000000">
+            <div id="colorPreview"></div>
+
+            <input type="range" id="sizePicker" min="1" max="20" value="4">
+
+            <button id="penBtn" class="tool-btn active">펜</button>
+            <button id="eraserBtn" class="tool-btn">지우개</button>
+            <button id="clearBtn" class="tool-btn">전체 지우기</button>
+        </div>
+
+        <canvas id="board"></canvas>
+    </div>
+
+    <div class="panel chat-panel">
+        <h3>💬 채팅</h3>
+
+        <div class="messages" id="messages">
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="msgInput" placeholder="메시지를 입력하세요" onkeyup="if(window.event.keyCode==13){sendMessage()}">
+            <button onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+</div>
+
+<script src="/chat.js" defer></script>
+<script src="/draw.js" defer></script>
+<script src="/game.js" defer></script>
+
+<script>
+    // 페이지 로드 및 리사이즈 시 캔버스 크기 맞춤
+    function resizeCanvas() {
+        const canvas = document.getElementById('board');
+        const parent = canvas.parentElement;
+        // 툴바 높이 및 패딩을 제외한 높이 계산
+        const toolbarHeight = document.querySelector('.draw-panel .toolbar').offsetHeight;
+        const h3Height = document.querySelector('.draw-panel h3').offsetHeight;
+
+        const totalOffset = 60 + toolbarHeight + h3Height; // 여유분 포함
+
+        const availableHeight = parent.clientHeight - totalOffset;
+
+        canvas.width = parent.clientWidth - 30; // 패널 좌우 패딩 고려
+        canvas.height = availableHeight > 300 ? availableHeight : 300;
+    }
+
+    window.addEventListener('load', () => {
+        // DOM 로드 후 캔버스 초기 크기 설정
+        setTimeout(resizeCanvas, 100);
+    });
+    window.addEventListener('resize', resizeCanvas);
+</script>
+
+</body>
+</html>
